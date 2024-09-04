@@ -1,0 +1,125 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(WalkingTrackerApp());
+}
+
+class WalkingTrackerApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Walking Tracker',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: WalkingTrackerHomePage(),
+    );
+  }
+}
+
+class WalkingTrackerHomePage extends StatefulWidget {
+  @override
+  _WalkingTrackerHomePageState createState() => _WalkingTrackerHomePageState();
+}
+
+class _WalkingTrackerHomePageState extends State<WalkingTrackerHomePage> {
+  Map<String, double> stepsData = {};
+  final TextEditingController _controller = TextEditingController();
+  DateTime selectedDate = DateTime.now();
+
+  void _addSteps() {
+    if (_controller.text.isNotEmpty) {
+      double steps = double.tryParse(_controller.text) ?? 0.0;
+      if (steps > 0) {
+        setState(() {
+          String dateKey = '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}';
+          stepsData[dateKey] = steps;
+        });
+        _controller.clear();
+      }
+    }
+  }
+
+  double get stepsForSelectedDate {
+    String dateKey = '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}';
+    return stepsData[dateKey] ?? 0.0;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Walking Tracker"),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Calendar
+            Container(
+              height: 60,
+              child: ListView.builder(
+                itemCount: 31, // Maximum 31 day
+                scrollDirection: Axis.horizontal,
+                itemBuilder: (context, index) {
+                  DateTime dayDate = DateTime(selectedDate.year, selectedDate.month, index + 1);
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        selectedDate = dayDate;
+                      });
+                    },
+                    child: Container(
+                      width: 40,
+                      margin: EdgeInsets.symmetric(horizontal: 2),
+                      decoration: BoxDecoration(
+                        color: selectedDate.day == (index + 1) ? Colors.blue : Colors.grey,
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      child: Center(
+                        child: Text(
+                          (index + 1).toString(),
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            SizedBox(height: 20),
+            TextField(
+              controller: _controller,
+              decoration: InputDecoration(
+                labelText: "Enter the number of steps",
+                suffixIcon: IconButton(
+                  icon: Icon(Icons.add),
+                  onPressed: _addSteps,
+                ),
+              ),
+              keyboardType: TextInputType.number,
+            ),
+            SizedBox(height: 20),
+            Text(
+              "Steps for ${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}: ${stepsForSelectedDate.toStringAsFixed(0)} steps",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 20),
+            Expanded(
+              child: ListView.builder(
+                itemCount: stepsData.length,
+                itemBuilder: (context, index) {
+                  String date = stepsData.keys.elementAt(index);
+                  return ListTile(
+                    title: Text("$date: ${stepsData[date]!.toStringAsFixed(0)} steps"),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
